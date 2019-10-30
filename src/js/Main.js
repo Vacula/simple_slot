@@ -32,9 +32,9 @@ class Main extends PIXI.Container {
 
         button.interactive = true;
         button.pointertap = () => {
-            this.stopButton.enabled = true;
+            this.stopButton.interactive = true;
             this.reels.spinStart();
-            button.enabled = false;
+            button.interactive = false;
         };
         return button;
     }
@@ -45,12 +45,11 @@ class Main extends PIXI.Container {
             buttonText: 'Stop'
         });
 
-        button.interactive = true;
-        button.enabled = false;
+        button.interactive = false;
         button.pointertap = () => {
-            this.spinButton.enabled = true;
+            this.spinButton.interactive = true;
             this.reels.spinStop();
-            button.enabled = false;
+            button.interactive = false;
         };
         return button;
     }

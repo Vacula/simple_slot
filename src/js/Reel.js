@@ -39,6 +39,7 @@ class Reel extends PIXI.Container {
     }
 
     start() {
+        this.state = Reel.STATE_STOPPED;
         if (this.state === Reel.STATE_STOPPED){
 
             this._chargeTimeline.kill();
