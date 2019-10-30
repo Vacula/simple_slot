@@ -138,8 +138,6 @@ class Reel extends PIXI.Container {
 
         timeline.addCallback(() => {
             this.state = Reel.STATE_STOPPED;
-            this._updateSymbols();
-            this._onStop();
         }, 1 + 0.00001);
         return timeline;
     }
@@ -202,7 +200,6 @@ class Reel extends PIXI.Container {
             this.state = Reel.STATE_STOPPED;
         }
     }
-
 }
 
 Reel.STATE_CHARGING = "charging";

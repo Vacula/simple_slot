@@ -2,12 +2,17 @@
   "name": "simple_slot",
   "version": "1.0.0",
   "description": "slot",
+  "homepage": "https://Vacula.github.io/simple_slot/",
   "main": "src/js/index.js",
   "scripts": {
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist",
     "dev": "webpack --mode=development",
     "build": "webpack --mode=production",
     "hot": "webpack-dev-server --hot --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vacula/simple_slot.git"
   },
   "keywords": [
     "slot",
