@@ -42,6 +42,7 @@ module.exports = {
         new CleanWebpackPlugin(),
         new CopyPlugin([
             { from: 'src/assets', to: 'assets' },
+            { from: 'src/json', to: 'src/json' },
             { from: './index.html', to: './index.html' }
         ]),
         new ExtractTextPlugin({
