@@ -3,59 +3,66 @@ import {TweenLite} from "gsap/TweenMax";
 import {TimelineMax} from "gsap/TimelineMax";
 import Symbol from "./Symbol";
 import "./polyfills.js";
+import {game, Game} from "./Game";
+import winAnimation from "./animation/winAnimation";
 
 class Reel extends PIXI.Container {
     constructor(reels, column){
         super();
         this.column = column;
         this.reels = reels;
+        this.dispatcher = reels.dispatcher;
+        this._speed = 1;
         this._queue = [];
         this.state = Reel.STATE_STOPPED;
-        this._symbolWidth = 126;
-        this._symbolHeight = 125;
-        this.position.set(reels.x + (this.column - 1) * this._symbolWidth, 0)
     }
 
-    init(){
-        this.speed = 1;
-        this.number = 3;
+    init(config){
+        this.config = config;
+        this.speed = config.speed;
+        this.number = config.number;
+        this.symbolNumber = config.symbolNumber;
+        this.reelset = config.reelset;
+        this._defaultCombination = config.defaultCombination;
+        this._reelLayout = config.reelLayout;
         this._oneSymbolDuration = 0.1;
-        this._symbolWidth = 126;
-        this._symbolHeight = 125;
+        this._symbolWidth = config.symbolWidth;
+        this._symbolHeight = config.symbolHeight;
         this._mountSymbols();
         this.default();
         this._stepTimeline = this._createStepTimeLine();
-        this._chargeTimeline = this._createChargeTimeLine();
-        this._bounceTimeline = this._createBounceTimeLine();
+        this._endTimeline = this._createEndTimeLine();
         this._putMask();
-        this.position.set((this.column - 1) * (this._symbolWidth + 18), this.reels.y);
+        this.position.set(this._reelLayout.left, this._reelLayout.top);
     }
 
     default(){
-        [Math.randomInt(1,8), Math.randomInt(1,8), Math.randomInt(1,8)].forEach((id, index) => {
+        this._defaultCombination[this.column-1].forEach((id, index) => {
             const symbol = this[index + 1];
             symbol && symbol.replace(id);
         });
     }
 
     start() {
-        this.state = Reel.STATE_STOPPED;
         if (this.state === Reel.STATE_STOPPED){
+            this._endTimeline.kill();
+            this._endTimeline = this._createEndTimeLine();
 
-            this._chargeTimeline.kill();
-            this._chargeTimeline = this._createChargeTimeLine();
-
-            this._bounceTimeline.kill();
-            this._bounceTimeline = this._createBounceTimeLine();
-
-            this._charge();
+            this._startSpin();
+            this.stop();
         }
     }
 
     stop(){
-        this.state = Reel.STATE_SPINNING;
-        this.state = Reel.STATE_STOPPING;
-        this._pushResponse([Math.randomInt(1,8), Math.randomInt(1,8), Math.randomInt(1,8)]);
+        if(this.state === Reel.STATE_SPINNING){
+            setTimeout(() => {
+                if(game.state === Game.SPIN_STOP){
+                    this.state = Reel.STATE_STOPPING;
+                    this._pushResponse(game.response.symbols[this.column - 1]);
+                } else{
+                    this.stop()
+                }
+            }, 3000);}
     }
 
     blur() {
@@ -90,7 +97,6 @@ class Reel extends PIXI.Container {
     _mountSymbols(){
         Number(this.number + 2).times(index => {
             const symbol = this._mountSymbol(index);
-
             if (index === 0 || index === this.number + 1){
                 symbol.replace(this._getNextSymbolId());
             }
@@ -101,7 +107,7 @@ class Reel extends PIXI.Container {
         if (fromQueue){
             return this._queue.pop();
         } else {
-            return Math.randomInt(1,8);
+            return this.reelset.next();
         }
     }
 
@@ -116,29 +122,29 @@ class Reel extends PIXI.Container {
     _putMask(){
         this.mask = new PIXI.Graphics();
         this.mask.beginFill(0);
-        this.mask.drawRect(0,0,126,374);
+        this.mask.drawRect(0,0,this._symbolWidth,this._symbolHeight * this.number);
         this.mask.endFill();
         this.addChild(this.mask);
     }
 
-    _charge(){
-        this.state = Reel.STATE_CHARGING;
-        this._chargeTimeline.play(0)
+    _startSpin(){
+        this.state = Reel.STATE_SPINNING;
+        this._step();
     }
 
-    _createChargeTimeLine(){
-        const timeline = this._createExtraTimeline(1);
-        timeline.addCallback(() => {
-            this._step();
-        }, 1);
-        return timeline;
-    };
-
-    _createBounceTimeLine(){
+    _createEndTimeLine(){
         const timeline = this._createExtraTimeline(1);
 
         timeline.addCallback(() => {
             this.state = Reel.STATE_STOPPED;
+            if(this.column === 3){
+                game.setState(game.nextState);
+                if(game.nextState === Game.WIN){
+                    winAnimation.start(game.response)
+                } else {
+                    game.main.spinButton.enabled = true;
+                }
+            }
         }, 1 + 0.00001);
         return timeline;
     }
@@ -168,17 +174,17 @@ class Reel extends PIXI.Container {
             this._handleEndOfStep();
             if (this.state === Reel.STATE_STOPPING && !this._queue.length) {
                 timeline.stop();
-                this._bounce();
+                this._end();
             }}, duration + 0.00001);
         timeline.stop();
         timeline.timeScale(this.speed || 1);
         return timeline;
     };
 
-    _bounce(){
-        this.state = Reel.STATE_BOUNCING;
+    _end(){
+        this.state = Reel.STATE_ENDING;
         this.normal();
-        this._bounceTimeline.play(0);
+        this._endTimeline.play(0);
     }
 
     _handleEndOfStep(){
@@ -194,7 +200,7 @@ class Reel extends PIXI.Container {
     }
 
     _step(){
-        if ([Reel.STATE_CHARGING, Reel.STATE_SPINNING].includes(this.state)){
+        if (this.state === Reel.STATE_SPINNING){
             this.state = Reel.STATE_SPINNING;
             this._stepTimeline.play(0);
         } else {
@@ -203,10 +209,9 @@ class Reel extends PIXI.Container {
     }
 }
 
-Reel.STATE_CHARGING = "charging";
 Reel.STATE_SPINNING = "spinning";
 Reel.STATE_STOPPING = "stopping";
-Reel.STATE_BOUNCING = "bouncing";
+Reel.STATE_ENDING = "ending";
 Reel.STATE_STOPPED = "stopped";
 
 export default Reel;

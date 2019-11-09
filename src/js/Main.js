@@ -1,6 +1,8 @@
 import * as PIXI from "pixi.js";
 import Reels from "./Reels";
 import Button from "./Button";
+import InfoField from "./InfoField";
+import SkipArea from "./SkipArea";
 
 class Main extends PIXI.Container {
     constructor(){
@@ -9,12 +11,24 @@ class Main extends PIXI.Container {
     }
 
     init(){
-        this.background = this.addChild(PIXI.Sprite.from('assets/background.png'));
+        if(this._inited){
+            return
+        }
+        this.background = this.addChild(PIXI.Sprite.from('assets/BG.png'));
+
         this.reels = this.addChild(this._createReels());
+        this.reels.position.set(70,50);
+
         this.spinButton = this.addChild(this._createSpinButton());
-        this.spinButton.position.set(this.width - this.spinButton.width -10, this.height - this.spinButton.height - 10);
-        this.stopButton = this.addChild(this._createStopButton());
-        this.stopButton.position.set(10, this.height - this.stopButton.height - 10);
+        this.spinButton.position.set(this.background.width - this.spinButton.width - 38, (this.background.height - this.spinButton.height) / 2);
+
+        this.infoField = this.addChild(this._createInfoField());
+        this.infoField.position.set(this.background.width - this.infoField.width-5, this.spinButton.y + this.spinButton.height + 30);
+
+        this.animations = this.addChild(new PIXI.Container());
+
+        this.skipArea = this.addChild(new SkipArea(this.background.width, this.background.height));
+
         this._inited = true;
     }
 
@@ -24,33 +38,27 @@ class Main extends PIXI.Container {
         return reels;
     };
 
+    _createInfoField(){
+        const infoField = new InfoField();
+        infoField.init();
+        return infoField;
+    };
+
     _createSpinButton(){
         const button = Button.createButton({
-            data: {x:0, y:0, width: 250, height:60},
-            buttonText: 'Spin'
+            images: {
+                "up":"assets/BTN_Spin.png",
+                "down":"assets/BTN_Spin.png",
+                "disabled":"assets/BTN_Spin_d.png"
+            }
         });
 
-        button.interactive = true;
+        button.enabled = true;
         button.pointertap = () => {
-            this.stopButton.interactive = true;
+            button.enabled = false;
             this.reels.spinStart();
-            button.interactive = false;
         };
-        return button;
-    }
 
-    _createStopButton(){
-        const button = Button.createButton({
-            data: {x:0, y:0, width: 250, height:60},
-            buttonText: 'Stop'
-        });
-
-        button.interactive = false;
-        button.pointertap = () => {
-            this.spinButton.interactive = true;
-            this.reels.spinStop();
-            button.interactive = false;
-        };
         return button;
     }
 }

@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import AnimatedSprite from "./animation/AnimatedSprite";
 
 class Symbol extends PIXI.Container {
     constructor(reel){
@@ -14,7 +15,7 @@ class Symbol extends PIXI.Container {
             width: this._width,
             height: this._height,
             color: 0x000000,
-            alpha: 0.5
+            alpha: 0
         }));
         this.state = Symbol.STATE_NORMAL;
     }
@@ -73,15 +74,17 @@ class Symbol extends PIXI.Container {
     }
 
     _blur(){
-        this.content.sprite.tint = 0xfff00f;
+        this.content.sprite.frame = 1;
     }
 
     _normal(){
-        this.content.sprite.tint = 0xffffff;
+        this.content.sprite.frame = 0;
     }
 
     static createSymbolSprite(id){
-        return PIXI.Sprite.from(`assets/img${String(id)}.jpg`);
+        const sprite = AnimatedSprite.fromImages([`SYM${String(id)}.png`, `SYM${String(id)}_BLUR.png`]);
+        sprite.frame = 0;
+        return sprite;
     }
 
     get row (){

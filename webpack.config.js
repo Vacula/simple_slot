@@ -6,6 +6,7 @@ const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
    entry: [
+       'babel-polyfill',
        './src/js/index.js',
        './src/css/style.css'
     ],
@@ -22,7 +23,7 @@ module.exports = {
             use: {
                 loader: 'babel-loader',
                 options: {
-                    presets: 'env'
+                    presets: ['env']
                 }
             }
         },
@@ -46,6 +47,6 @@ module.exports = {
         new ExtractTextPlugin({
             filename: './src/css/style.css',
             allChunks: true,
-        }),
+        })
     ]
 };
