@@ -5,7 +5,7 @@ body{
     background-color: #303030;
 }
 
-#canvas_container{
+#game{
     max-width: 100%;
     max-height: 100%;
     left: 50%;
@@ -15,6 +15,7 @@ body{
 }
 
 #loading_text{
+    color: #ffffff;
     margin: 0;
     top: 50%;
     left: 50%;
